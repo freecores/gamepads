@@ -3,7 +3,7 @@
 -- Testbench for the
 -- SNESpad controller core
 --
--- $Id: tb.vhd,v 1.1 2004-10-05 17:05:31 arniml Exp $
+-- $Id: tb.vhd,v 1.2 2004-10-05 18:19:08 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -56,6 +56,7 @@ end tb;
 
 
 use work.snespad_pack.all;
+use work.snespad_comp.snespad;
 
 architecture behav of tb is
 
@@ -63,34 +64,6 @@ architecture behav of tb is
   constant num_pads_c     : natural := 2;
   constant reset_level_c  : natural := 0;
   constant button_level_c : natural := 0;
-
-  component snespad
-    generic (
-      num_pads_g       :     natural := 1;
-      reset_level_g    :     natural := 0;
-      button_level_g   :     natural := 0;
-      clocks_per_6us_g :     natural := 6
-    );
-    port (
-      clk_i            : in  std_logic;
-      reset_i          : in  std_logic;
-      pad_clk_o        : out std_logic;
-      pad_latch_o      : out std_logic;
-      pad_data_i       : in  std_logic_vector(num_pads_g-1 downto 0);
-      but_a_o          : out std_logic_vector(num_pads_g-1 downto 0);
-      but_b_o          : out std_logic_vector(num_pads_g-1 downto 0);
-      but_x_o          : out std_logic_vector(num_pads_g-1 downto 0);
-      but_y_o          : out std_logic_vector(num_pads_g-1 downto 0);
-      but_start_o      : out std_logic_vector(num_pads_g-1 downto 0);
-      but_sel_o        : out std_logic_vector(num_pads_g-1 downto 0);
-      but_tl_o         : out std_logic_vector(num_pads_g-1 downto 0);
-      but_tr_o         : out std_logic_vector(num_pads_g-1 downto 0);
-      but_up_o         : out std_logic_vector(num_pads_g-1 downto 0);
-      but_down_o       : out std_logic_vector(num_pads_g-1 downto 0);
-      but_left_o       : out std_logic_vector(num_pads_g-1 downto 0);
-      but_right_o      : out std_logic_vector(num_pads_g-1 downto 0)
-    );
-  end component snespad;
 
 
   signal clk_s   : std_logic;
@@ -246,4 +219,7 @@ end behav;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/05 17:05:31  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
