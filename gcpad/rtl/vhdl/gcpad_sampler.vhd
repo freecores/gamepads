@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_sampler.vhd,v 1.1 2004-10-08 21:19:17 arniml Exp $
+-- $Id: gcpad_sampler.vhd,v 1.2 2004-10-08 21:35:08 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -154,3 +154,10 @@ begin
   sample_underflow_o <= sample_underflow_q;
 
 end rtl;
+
+
+-------------------------------------------------------------------------------
+-- File History:
+--
+-- $Log: not supported by cvs2svn $
+-------------------------------------------------------------------------------
