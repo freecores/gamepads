@@ -3,7 +3,7 @@
 -- A testbench model for the
 -- GCpad controller core
 --
--- $Id: gcpad_mod.vhd,v 1.2 2004-10-10 19:58:12 arniml Exp $
+-- $Id: gcpad_mod.vhd,v 1.3 2004-10-10 20:12:06 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -200,7 +200,7 @@ begin
       end case;
 
     end loop;
-  end process rec;
+  end process model;
   --
   -----------------------------------------------------------------------------
 
