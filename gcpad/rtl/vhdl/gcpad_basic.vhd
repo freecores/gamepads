@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_basic.vhd,v 1.4 2004-10-09 17:03:43 arniml Exp $
+-- $Id: gcpad_basic.vhd,v 1.5 2004-10-09 22:18:35 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -52,7 +52,9 @@ use ieee.std_logic_1164.all;
 entity gcpad_basic is
 
   generic (
+    -- active level of reset_i
     reset_level_g    :       integer := 0;
+    -- number of clk_i periods during 1us
     clocks_per_1us_g :       integer := 2
   );
   port (
@@ -258,6 +260,9 @@ end struct;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.4  2004/10/09 17:03:43  arniml
+-- enhance handshaking between gcpad_rx and gcpad_ctrl
+--
 -- Revision 1.3  2004/10/09 00:33:55  arniml
 -- shift rx_data to button assignment to toplevel
 --
