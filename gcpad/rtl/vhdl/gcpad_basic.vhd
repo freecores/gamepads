@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_basic.vhd,v 1.1 2004-10-07 21:23:10 arniml Exp $
+-- $Id: gcpad_basic.vhd,v 1.2 2004-10-08 20:51:59 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -118,7 +118,7 @@ architecture struct of gcpad_basic is
       pad_data_o       : out std_logic;
       tx_start_i       : in  boolean;
       tx_finished_o    : out boolean;
-      tx_size_i        : in  std_logic_vector( 4 downto 0);
+      tx_size_i        : in  std_logic_vector( 1 downto 0);
       tx_command_i     : in  std_logic_vector(23 downto 0)
     );
   end component;
@@ -133,7 +133,7 @@ architecture struct of gcpad_basic is
       reset_i          : in  std_logic;
       rx_en_i          : in  boolean;
       rx_done_o        : out boolean;
-      rx_size_i        : in  std_logic_vector(6 downto 0);
+      rx_size_i        : in  std_logic_vector(3 downto 0);
       pad_data_i       : in  std_logic;
       but_a_o          : out std_logic;
       but_b_o          : out std_logic;
@@ -159,11 +159,11 @@ architecture struct of gcpad_basic is
 
   -----------------------------------------------------------------------------
   -- constants for standard status polling
-  constant rx_size_c    : std_logic_vector( 6 downto 0) := "1000000";
-  signal   rx_size_s    : std_logic_vector( 6 downto 0);
+  constant rx_size_c    : std_logic_vector( 3 downto 0) := "1000";
+  signal   rx_size_s    : std_logic_vector( 3 downto 0);
   --
-  constant tx_size_c    : std_logic_vector( 4 downto 0) := "11000";
-  signal   tx_size_s    : std_logic_vector( 4 downto 0);
+  constant tx_size_c    : std_logic_vector( 1 downto 0) := "11";
+  signal   tx_size_s    : std_logic_vector( 1 downto 0);
   --
   constant tx_command_c : std_logic_vector(23 downto 0) := "010000000000001100000010";
   signal   tx_command_s : std_logic_vector(23 downto 0);
@@ -261,4 +261,7 @@ end struct;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/07 21:23:10  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------

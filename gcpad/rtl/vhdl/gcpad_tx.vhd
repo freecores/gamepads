@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_tx.vhd,v 1.1 2004-10-07 21:23:10 arniml Exp $
+-- $Id: gcpad_tx.vhd,v 1.2 2004-10-08 20:51:59 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -64,7 +64,7 @@ entity gcpad_tx is
     -- Control Interface ------------------------------------------------------
     tx_start_i       : in  boolean;
     tx_finished_o    : out boolean;
-    tx_size_i        : in  std_logic_vector( 4 downto 0);
+    tx_size_i        : in  std_logic_vector( 1 downto 0);
     tx_command_i     : in  std_logic_vector(23 downto 0)
   );
 
@@ -119,6 +119,7 @@ begin
   --   Implements the sequential elements of this module.
   --
   seq: process (reset_i, clk_i)
+    variable size_v : std_logic_vector(num_bits_t'range);
   begin
     if reset_i = reset_level_g then
       command_q     <= (others => '1');
@@ -138,7 +139,11 @@ begin
       if load_command_s then
         command_q(24 downto 1)  <= tx_command_i;
         command_q(0)            <= '1';
-        num_bits_q              <= unsigned(tx_size_i) + 1;
+
+        -- workaround for GHDL concatenation
+        size_v(num_bits_t'high downto 3) := tx_size_i;
+        size_v(2 downto 0)               := (others => '0');
+        num_bits_q              <= unsigned(size_v) + 1;
 
       else
         if shift_bits_s then
@@ -301,4 +306,7 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/07 21:23:10  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_rx.vhd,v 1.1 2004-10-07 21:23:10 arniml Exp $
+-- $Id: gcpad_rx.vhd,v 1.2 2004-10-08 20:51:59 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -63,7 +63,7 @@ entity gcpad_rx is
     -- Control Interface ------------------------------------------------------
     rx_en_i          : in  boolean;
     rx_done_o        : out boolean;
-    rx_size_i        : in  std_logic_vector(6 downto 0);
+    rx_size_i        : in  std_logic_vector(3 downto 0);
     -- Gamepad Interface ------------------------------------------------------
     pad_data_i       : in  std_logic;
     -- Buttons Interface ------------------------------------------------------
@@ -149,6 +149,7 @@ begin
   --
   seq: process (reset_i, clk_i)
     variable dec_timeout_v : boolean;
+    variable size_v        : std_logic_vector(num_buttons_read_t'range);
   begin
     if reset_i = reset_level_g then
       buttons_q       <= (others => '0');
@@ -244,7 +245,9 @@ begin
 
       if reset_num_buttons_s then
         -- explicit preload
-        num_buttons_read_q   <= unsigned(rx_size_i);
+        size_v(num_buttons_read_t'high downto 3) := rx_size_i;
+        size_v(2 downto 0)                       := (others => '0');
+        num_buttons_read_q   <= unsigned(size_v);
       elsif shift_buttons_s then
         -- decrement counter when a button bit has been read
         if not all_buttons_read_s then
@@ -432,4 +435,7 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/07 21:23:10  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
