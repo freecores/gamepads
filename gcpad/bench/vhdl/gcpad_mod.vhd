@@ -3,7 +3,7 @@
 -- A testbench model for the
 -- GCpad controller core
 --
--- $Id: gcpad_mod.vhd,v 1.1 2004-10-10 17:26:28 arniml Exp $
+-- $Id: gcpad_mod.vhd,v 1.2 2004-10-10 19:58:12 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -66,6 +66,12 @@ end gcpad_mod;
 
 architecture behav of gcpad_mod is
 
+  -----------------------------------------------------------------------------
+  -- Procedure wait_n_us
+  --
+  -- Purpose:
+  --   Waits for the given number of clk_i cycles.
+  --
   procedure wait_n_us(clocks : in natural) is
   begin
     wait until clk_i = '0';
@@ -74,12 +80,21 @@ architecture behav of gcpad_mod is
       wait until clk_i = '0';
     end loop;
   end wait_n_us;
+  --
+  -----------------------------------------------------------------------------
 
   signal time_cnt_q : natural;
   signal timeout_s  : boolean;
 
 begin
 
+  -----------------------------------------------------------------------------
+  -- Process timeout
+  --
+  -- Purpose:
+  --   Detects a timeout on incoming pad data stream after 5 us of
+  --   inactivity. Resynchronizes upon falling edge of pad_data_io.
+  --
   timeout: process (clk_i, pad_data_io)
   begin
     if pad_data_io = '0' then
@@ -95,8 +110,17 @@ begin
       end if;
     end if;
   end process timeout;
+  --
+  -----------------------------------------------------------------------------
 
-  rec: process
+
+  -----------------------------------------------------------------------------
+  -- Process model
+  --
+  -- Purpose:
+  --   Simple model for the functionality of a GC controller pad.
+  --
+  model: process
 
     procedure send_packet(packet : in std_logic_vector) is
       variable time_low_v, time_high_v : time;
@@ -122,12 +146,17 @@ begin
 
 
     variable command_v : std_logic_vector(24 downto 0);
+    constant id_c      : std_logic_vector(23 downto 0) := "000010010000000000000000";
   begin
 
     loop
       command_v   := (others => '1');
       pad_data_io <= 'Z';
 
+      -------------------------------------------------------------------------
+      -- Step 1:
+      -- Receive command and associated data.
+      --
       wait until pad_data_io = '0';
       wait for 1 ns;
       for i in 24 downto 0 loop
@@ -141,18 +170,23 @@ begin
             wait until pad_data_io /= '0';
           end if;
 
-          if i > 0 then
-            -- wait for high -> low edge
-            wait until (pad_data_io = '0');
-          end if;
+          -- wait for high -> low edge
+          wait until (pad_data_io = '0') or timeout_s;
 
         end if;
+
+        wait for 1 ns;
       end loop;
 
-      -- detect command
+      -------------------------------------------------------------------------
+      -- Detect command and send response
+      --
       case command_v(24 downto 17) is
         -- get ID
         when "00000000" =>
+          wait_n_us(5 * clocks_per_1us_g);
+          send_packet(id_c);
+          send_packet("1");
 
         -- poll status
         when "0H000000" =>
@@ -167,5 +201,7 @@ begin
 
     end loop;
   end process rec;
+  --
+  -----------------------------------------------------------------------------
 
 end behav;
