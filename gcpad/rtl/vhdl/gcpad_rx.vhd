@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_rx.vhd,v 1.4 2004-10-09 00:33:55 arniml Exp $
+-- $Id: gcpad_rx.vhd,v 1.5 2004-10-09 17:05:12 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -63,6 +63,7 @@ entity gcpad_rx is
     -- Control Interface ------------------------------------------------------
     rx_en_i          : in  boolean;
     rx_done_o        : out boolean;
+    rx_data_ok_o     : out boolean;
     rx_size_i        : in  std_logic_vector(3 downto 0);
     -- Gamepad Interface ------------------------------------------------------
     pad_data_i       : in  std_logic;
@@ -129,8 +130,8 @@ architecture rtl of gcpad_rx is
   signal sample_s           : std_logic;
   signal sample_underflow_s : boolean;
 
-  signal rx_done_q,
-         set_rx_done_s : boolean;
+  signal rx_done_s,
+         rx_done_q  : boolean;
 
 begin
 
@@ -173,7 +174,9 @@ begin
       rx_done_q            <= false;
 
     elsif clk_i'event and clk_i = '1' then
-      state_q <= state_s;
+      state_q   <= state_s;
+
+      rx_done_q <= rx_done_s;
 
       -- timeout counter
       if sync_timeout_s then
@@ -220,12 +223,6 @@ begin
         buttons_q <= shift_buttons_q;
       end if;
 
-      if set_rx_done_s then
-        rx_done_q <= true;
-      else
-        rx_done_q <= false;
-      end if;
-
     end if;
 
   end process seq;
@@ -255,7 +252,7 @@ begin
     state_s             <= IDLE;
     shift_buttons_s     <= false;
     save_buttons_s      <= false;
-    set_rx_done_s       <= false;
+    rx_done_s           <= false;
     reset_num_buttons_s <= false;
     wrap_sample_s       <= false;
 
@@ -286,7 +283,7 @@ begin
           -- wait for timeout
           wrap_sample_s     <= true;
           if timeout_q then
-            set_rx_done_s   <= true;
+            rx_done_s       <= true;
             state_s         <= IDLE;
           end if;
 
@@ -303,7 +300,7 @@ begin
             state_s       <= WAIT_FOR_1;
           else
             -- timeout while reading buttons!
-            set_rx_done_s <= true;
+            rx_done_s     <= true;
             state_s       <= IDLE;
           end if;
 
@@ -319,12 +316,10 @@ begin
         if pad_data_s = '0' then
           sync_sample_s       <= true;
 
+          -- loop again in any case
+          state_s             <= WAIT_FOR_1;
           if not all_buttons_read_s then
-            -- loop another time if there are still some buttons to read
             shift_buttons_s   <= true;
-            state_s           <= WAIT_FOR_1;
-          else
-            state_s           <= WAIT_FOR_0;
           end if;
 
         else
@@ -335,7 +330,7 @@ begin
               state_s         <= FINISHED;
             else
               -- timeout while reading buttons!
-              set_rx_done_s   <= true;
+              rx_done_s       <= true;
               state_s         <= IDLE;
             end if;
 
@@ -349,7 +344,7 @@ begin
       when FINISHED =>
         -- finally save buttons
         save_buttons_s <= true;
-        set_rx_done_s  <= true;
+        rx_done_s      <= true;
 
       when others =>
         null;
@@ -364,8 +359,9 @@ begin
   -----------------------------------------------------------------------------
   -- Output Mapping
   -----------------------------------------------------------------------------
-  rx_done_o <= rx_done_q;
-  rx_data_o <= buttons_q;
+  rx_done_o    <= rx_done_q;
+  rx_data_ok_o <= save_buttons_s;
+  rx_data_o    <= buttons_q;
 
 
 end rtl;
@@ -375,6 +371,9 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.4  2004/10/09 00:33:55  arniml
+-- shift rx_data to button assignment to toplevel
+--
 -- Revision 1.3  2004/10/08 21:18:39  arniml
 -- move sampler to separate unit
 --
