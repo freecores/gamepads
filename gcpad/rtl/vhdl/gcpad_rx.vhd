@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_rx.vhd,v 1.3 2004-10-08 21:18:39 arniml Exp $
+-- $Id: gcpad_rx.vhd,v 1.4 2004-10-09 00:33:55 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -48,7 +48,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.gcpad_pack.analog_axis_t;
+use work.gcpad_pack.buttons_t;
 
 entity gcpad_rx is
 
@@ -66,25 +66,8 @@ entity gcpad_rx is
     rx_size_i        : in  std_logic_vector(3 downto 0);
     -- Gamepad Interface ------------------------------------------------------
     pad_data_i       : in  std_logic;
-    -- Buttons Interface ------------------------------------------------------
-    but_a_o          : out std_logic;
-    but_b_o          : out std_logic;
-    but_x_o          : out std_logic;
-    but_y_o          : out std_logic;
-    but_z_o          : out std_logic;
-    but_start_o      : out std_logic;
-    but_tl_o         : out std_logic;
-    but_tr_o         : out std_logic;
-    but_left_o       : out std_logic;
-    but_right_o      : out std_logic;
-    but_up_o         : out std_logic;
-    but_down_o       : out std_logic;
-    ana_joy_x_o      : out analog_axis_t;
-    ana_joy_y_o      : out analog_axis_t;
-    ana_c_x_o        : out analog_axis_t;
-    ana_c_y_o        : out analog_axis_t;
-    ana_l_o          : out analog_axis_t;
-    ana_r_o          : out analog_axis_t
+    -- Data Interface ---------------------------------------------------------
+    rx_data_o        : out buttons_t
   );
 
 end gcpad_rx;
@@ -381,25 +364,8 @@ begin
   -----------------------------------------------------------------------------
   -- Output Mapping
   -----------------------------------------------------------------------------
-  rx_done_o   <= rx_done_q;
-  but_a_o     <= buttons_q(pos_a_c);
-  but_b_o     <= buttons_q(pos_b_c);
-  but_x_o     <= buttons_q(pos_x_c);
-  but_y_o     <= buttons_q(pos_y_c);
-  but_z_o     <= buttons_q(pos_z_c);
-  but_start_o <= buttons_q(pos_start_c);
-  but_tl_o    <= buttons_q(pos_tl_c);
-  but_tr_o    <= buttons_q(pos_tr_c);
-  but_left_o  <= buttons_q(pos_left_c);
-  but_right_o <= buttons_q(pos_right_c);
-  but_up_o    <= buttons_q(pos_up_c);
-  but_down_o  <= buttons_q(pos_down_c);
-  ana_joy_x_o <= buttons_q(joy_x_high_c downto joy_x_low_c);
-  ana_joy_y_o <= buttons_q(joy_y_high_c downto joy_y_low_c);
-  ana_c_x_o   <= buttons_q(c_x_high_c   downto c_x_low_c);
-  ana_c_y_o   <= buttons_q(c_y_high_c   downto c_y_low_c);
-  ana_l_o     <= buttons_q(l_high_c     downto l_low_c);
-  ana_r_o     <= buttons_q(r_high_c     downto r_low_c);
+  rx_done_o <= rx_done_q;
+  rx_data_o <= buttons_q;
 
 
 end rtl;
@@ -409,6 +375,9 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.3  2004/10/08 21:18:39  arniml
+-- move sampler to separate unit
+--
 -- Revision 1.2  2004/10/08 20:51:59  arniml
 -- turn rx and tx size into bytes instead of bits
 --

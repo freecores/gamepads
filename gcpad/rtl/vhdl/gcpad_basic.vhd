@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_basic.vhd,v 1.2 2004-10-08 20:51:59 arniml Exp $
+-- $Id: gcpad_basic.vhd,v 1.3 2004-10-09 00:33:55 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -87,7 +87,7 @@ entity gcpad_basic is
 end gcpad_basic;
 
 
-use work.gcpad_pack.analog_axis_t;
+use work.gcpad_pack.all;
 
 architecture struct of gcpad_basic is
 
@@ -135,24 +135,7 @@ architecture struct of gcpad_basic is
       rx_done_o        : out boolean;
       rx_size_i        : in  std_logic_vector(3 downto 0);
       pad_data_i       : in  std_logic;
-      but_a_o          : out std_logic;
-      but_b_o          : out std_logic;
-      but_x_o          : out std_logic;
-      but_y_o          : out std_logic;
-      but_z_o          : out std_logic;
-      but_start_o      : out std_logic;
-      but_tl_o         : out std_logic;
-      but_tr_o         : out std_logic;
-      but_left_o       : out std_logic;
-      but_right_o      : out std_logic;
-      but_up_o         : out std_logic;
-      but_down_o       : out std_logic;
-      ana_joy_x_o      : out analog_axis_t;
-      ana_joy_y_o      : out analog_axis_t;
-      ana_c_x_o        : out analog_axis_t;
-      ana_c_y_o        : out analog_axis_t;
-      ana_l_o          : out analog_axis_t;
-      ana_r_o          : out analog_axis_t
+      rx_data_o        : out buttons_t
     );
   end component;
 
@@ -177,6 +160,8 @@ architecture struct of gcpad_basic is
 
   signal rx_en_s,
          rx_done_s : boolean;
+
+  signal rx_data_s : buttons_t;
 
 begin
 
@@ -226,24 +211,7 @@ begin
       rx_done_o        => rx_done_s,
       rx_size_i        => rx_size_s,
       pad_data_i       => pad_data_io,
-      but_a_o          => but_a_o,
-      but_b_o          => but_b_o,
-      but_x_o          => but_x_o,
-      but_y_o          => but_y_o,
-      but_z_o          => but_z_o,
-      but_start_o      => but_start_o,
-      but_tl_o         => but_tl_o,
-      but_tr_o         => but_tr_o,
-      but_left_o       => but_left_o,
-      but_right_o      => but_right_o,
-      but_up_o         => but_up_o,
-      but_down_o       => but_down_o,
-      ana_joy_x_o      => ana_joy_x_o,
-      ana_joy_y_o      => ana_joy_y_o,
-      ana_c_x_o        => ana_c_x_o,
-      ana_c_y_o        => ana_c_y_o,
-      ana_l_o          => ana_l_o,
-      ana_r_o          => ana_r_o
+      rx_data_o        => rx_data_s
   );
 
 
@@ -254,6 +222,28 @@ begin
                  when pad_data_tx_s = '0' else
                    'Z';
 
+  -----------------------------------------------------------------------------
+  -- Output mapping
+  -----------------------------------------------------------------------------
+  but_a_o     <= rx_data_s(pos_a_c);
+  but_b_o     <= rx_data_s(pos_b_c);
+  but_x_o     <= rx_data_s(pos_x_c);
+  but_y_o     <= rx_data_s(pos_y_c);
+  but_z_o     <= rx_data_s(pos_z_c);
+  but_start_o <= rx_data_s(pos_start_c);
+  but_tl_o    <= rx_data_s(pos_tl_c);
+  but_tr_o    <= rx_data_s(pos_tr_c);
+  but_left_o  <= rx_data_s(pos_left_c);
+  but_right_o <= rx_data_s(pos_right_c);
+  but_up_o    <= rx_data_s(pos_up_c);
+  but_down_o  <= rx_data_s(pos_down_c);
+  ana_joy_x_o <= rx_data_s(joy_x_high_c downto joy_x_low_c);
+  ana_joy_y_o <= rx_data_s(joy_y_high_c downto joy_y_low_c);
+  ana_c_x_o   <= rx_data_s(c_x_high_c   downto c_x_low_c);
+  ana_c_y_o   <= rx_data_s(c_y_high_c   downto c_y_low_c);
+  ana_l_o     <= rx_data_s(l_high_c     downto l_low_c);
+  ana_r_o     <= rx_data_s(r_high_c     downto r_low_c);
+
 end struct;
 
 
@@ -261,6 +251,9 @@ end struct;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.2  2004/10/08 20:51:59  arniml
+-- turn rx and tx size into bytes instead of bits
+--
 -- Revision 1.1  2004/10/07 21:23:10  arniml
 -- initial check-in
 --
