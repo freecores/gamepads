@@ -3,7 +3,7 @@
 -- Testbench for the
 -- GCpad controller core
 --
--- $Id: tb.vhd,v 1.1 2004-10-07 21:24:06 arniml Exp $
+-- $Id: tb.vhd,v 1.2 2004-10-09 17:05:59 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -174,6 +174,8 @@ begin
     procedure send_packet(packet : in std_logic_vector(64 downto 0)) is
       variable time_low_v, time_high_v : time;
     begin
+      wait until clk_s'event and clk_s = '1';
+      wait for 1 ns;
       -- send request;
       pad_request_s <= '1';
       wait for 1 * period_c;
@@ -349,4 +351,7 @@ end behav;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/07 21:24:06  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
