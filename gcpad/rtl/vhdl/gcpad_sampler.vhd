@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_sampler.vhd,v 1.2 2004-10-08 21:35:08 arniml Exp $
+-- $Id: gcpad_sampler.vhd,v 1.3 2004-10-09 00:33:12 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -56,11 +56,14 @@ entity gcpad_sampler is
     clocks_per_1us_g   :     integer := 2
   );
   port (
+    -- System Interface -------------------------------------------------------
     clk_i              : in  std_logic;
     reset_i            : in  std_logic;
+    -- Control Interface ------------------------------------------------------
     wrap_sample_i      : in  boolean;
     sync_sample_i      : in  boolean;
     sample_underflow_o : out boolean;
+    -- Pad Interface ----------------------------------------------------------
     pad_data_i         : in  std_logic;
     pad_data_o         : out std_logic;
     sample_o           : out std_logic
@@ -160,4 +163,7 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.2  2004/10/08 21:35:08  arniml
+-- comments
+--
 -------------------------------------------------------------------------------
