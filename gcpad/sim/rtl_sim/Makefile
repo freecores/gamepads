@@ -2,7 +2,7 @@
 #
 # Tool-specific Makefile for the GHDL compiler.
 #
-# $Id: Makefile,v 1.2 2004-10-09 17:06:40 arniml Exp $
+# $Id: Makefile,v 1.3 2004-10-10 17:28:21 arniml Exp $
 #
 # Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 #
@@ -72,13 +72,40 @@ work/gcpad_basic-c.o: $(RTL_DIR)/gcpad_basic-c.vhd \
               work/gcpad_rx-c.o
 	$(ANALYZE) $(RTL_DIR)/gcpad_basic-c.vhd
 
+work/gcpad_full.o: $(RTL_DIR)/gcpad_full.vhd \
+              work/gcpad_pack-p.o            \
+              work/gcpad_ctrl.o              \
+              work/gcpad_tx.o                \
+              work/gcpad_rx.o
+	$(ANALYZE) $(RTL_DIR)/gcpad_full.vhd
+work/gcpad_full-c.o: $(RTL_DIR)/gcpad_full-c.vhd \
+              work/gcpad_full.o                  \
+              work/gcpad_ctrl-c.o                \
+              work/gcpad_tx-c.o                  \
+              work/gcpad_rx-c.o
+	$(ANALYZE) $(RTL_DIR)/gcpad_full-c.vhd
+
+work/gcpad_comp-p.o: $(RTL_DIR)/gcpad_comp-p.vhd
+	$(ANALYZE) $(RTL_DIR)/gcpad_comp-p.vhd
+
+work/gcpad_mod.o: $(BENCH_DIR)/gcpad_mod.vhd
+	$(ANALYZE) $(BENCH_DIR)/gcpad_mod.vhd
+work/gcpad_mod-c.o: $(BENCH_DIR)/gcpad_mod-c.vhd \
+                    work/gcpad_mod.o
+	$(ANALYZE) $(BENCH_DIR)/gcpad_mod-c.vhd
+
 work/tb.o: $(BENCH_DIR)/tb.vhd \
            work/gcpad_pack-p.o \
-           work/gcpad_basic.o
+           work/gcpad_comp-p.o \
+           work/gcpad_basic.o  \
+           work/gcpad_full.o   \
+           work/gcpad_mod.o
 	$(ANALYZE) $(BENCH_DIR)/tb.vhd
 work/tb-c.o: $(BENCH_DIR)/tb-c.vhd \
              work/tb.o             \
-             work/gcpad_basic-c.o
+             work/gcpad_basic-c.o  \
+             work/gcpad_full-c.o   \
+             work/gcpad_mod-c.o
 	$(ANALYZE) $(BENCH_DIR)/tb-c.vhd
 
 
