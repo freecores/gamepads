@@ -2,7 +2,7 @@
 --
 -- SNESpad controller core
 --
--- $Id: snespad.vhd,v 1.1 2004-10-05 17:01:27 arniml Exp $
+-- $Id: snespad.vhd,v 1.2 2004-10-05 18:22:40 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -52,9 +52,13 @@ use ieee.std_logic_1164.all;
 entity snespad is
 
   generic (
+    -- number of pads connected to this core
     num_pads_g       :     natural := 1;
+    -- active level of reset_i
     reset_level_g    :     natural := 0;
+    -- active level of the button outputs
     button_level_g   :     natural := 0;
+    -- number of clk_i periods during 6us
     clocks_per_6us_g :     natural := 6
   );
   port (
@@ -186,4 +190,7 @@ end struct;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/05 17:01:27  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
