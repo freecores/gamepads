@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_rx.vhd,v 1.2 2004-10-08 20:51:59 arniml Exp $
+-- $Id: gcpad_rx.vhd,v 1.3 2004-10-08 21:18:39 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -96,6 +96,23 @@ use work.gcpad_pack.all;
 
 architecture rtl of gcpad_rx is
 
+  component gcpad_sampler
+    generic (
+      reset_level_g      :     integer := 0;
+      clocks_per_1us_g   :     integer := 2
+    );
+    port (
+      clk_i              : in  std_logic;
+      reset_i            : in  std_logic;
+      wrap_sample_i      : in  boolean;
+      sync_sample_i      : in  boolean;
+      sample_underflow_o : out boolean;
+      pad_data_i         : in  std_logic;
+      pad_data_o         : out std_logic;
+      sample_o           : out std_logic
+    );
+  end component;
+
   type state_t is (IDLE,
                    DETECT_TIMEOUT,
                    WAIT_FOR_1,
@@ -109,16 +126,8 @@ architecture rtl of gcpad_rx is
   signal save_buttons_s  : boolean;
   signal shift_buttons_s : boolean;
 
-  constant cnt_sample_high_c  : natural := clocks_per_1us_g * 4 - 1;
-  subtype  cnt_sample_t       is natural range 0 to cnt_sample_high_c;
-  signal   cnt_zeros_q        : cnt_sample_t;
-  signal   cnt_ones_q         : cnt_sample_t;
-  signal   sampled_s          : boolean;
-  signal   sync_sample_s      : boolean;
-  signal   wrap_sample_s      : boolean;
-  signal   sample_underflow_q : boolean;
-
-  signal   more_ones_q    : boolean;
+  signal sync_sample_s   : boolean;
+  signal wrap_sample_s   : boolean;
 
   -- timeout counter counts three sample undeflows
   constant cnt_timeout_high_c : natural := 3;
@@ -133,13 +142,30 @@ architecture rtl of gcpad_rx is
   signal  all_buttons_read_s  : boolean;
   signal  reset_num_buttons_s : boolean;
 
-  signal pad_data_sync_q : std_logic_vector(1 downto 0);
-  signal pad_data_s      : std_logic;
+  signal pad_data_s         : std_logic;
+  signal sample_s           : std_logic;
+  signal sample_underflow_s : boolean;
 
   signal rx_done_q,
          set_rx_done_s : boolean;
 
 begin
+
+  sampler_b : gcpad_sampler
+    generic map (
+      reset_level_g => reset_level_g,
+      clocks_per_1us_g => clocks_per_1us_g
+    )
+    port map (
+      clk_i              => clk_i,
+      reset_i            => reset_i,
+      wrap_sample_i      => wrap_sample_s,
+      sync_sample_i      => sync_sample_s,
+      sample_underflow_o => sample_underflow_s,
+      pad_data_i         => pad_data_i,
+      pad_data_o         => pad_data_s,
+      sample_o           => sample_s
+    );
 
   -----------------------------------------------------------------------------
   -- Process seq
@@ -148,19 +174,13 @@ begin
   --   Implements the sequential elements of this module.
   --
   seq: process (reset_i, clk_i)
-    variable dec_timeout_v : boolean;
-    variable size_v        : std_logic_vector(num_buttons_read_t'range);
+    variable size_v : std_logic_vector(num_buttons_read_t'range);
   begin
     if reset_i = reset_level_g then
       buttons_q       <= (others => '0');
       shift_buttons_q <= (others => '0');
 
       state_q              <= IDLE;
-
-      cnt_zeros_q          <= cnt_sample_high_c;
-      cnt_ones_q           <= cnt_sample_high_c;
-      more_ones_q          <= false;
-      sample_underflow_q   <= false;
 
       cnt_timeout_q        <= cnt_timeout_high_c;
 
@@ -169,52 +189,8 @@ begin
       num_buttons_read_q   <= (others => '0');
       rx_done_q            <= false;
 
-      pad_data_sync_q      <= (others => '1');
-
-
     elsif clk_i'event and clk_i = '1' then
-      -- synchronizer for pad data
-      pad_data_sync_q(0) <= pad_data_i;
-      pad_data_sync_q(1) <= pad_data_sync_q(0);
-
-
       state_q <= state_s;
-
-
-      dec_timeout_v := false;
-      -- sample counter
-      if sync_sample_s then
-        -- explicit preload
-        cnt_zeros_q <= cnt_sample_high_c;
-        cnt_ones_q  <= cnt_sample_high_c;
-      else
-        if cnt_zeros_q = 0 then
-          if wrap_sample_s then
-            cnt_zeros_q   <= cnt_sample_high_c;
-          end if;
-          dec_timeout_v := true;
-        elsif pad_data_s = '0' then
-          cnt_zeros_q   <= cnt_zeros_q - 1;
-        end if;
-
-        if cnt_ones_q = 0 then
-          if wrap_sample_s then
-            cnt_ones_q    <= cnt_sample_high_c;
-          end if;
-          dec_timeout_v := true;
-        elsif pad_data_s /= '0' then
-          cnt_ones_q  <= cnt_ones_q - 1;
-        end if;
-      end if;
-
-      if cnt_ones_q < cnt_zeros_q then
-        more_ones_q <= true;
-      else
-        more_ones_q <= false;
-      end if;
-
-      -- detect sample underflow
-      sample_underflow_q <= dec_timeout_v;
 
       -- timeout counter
       if sync_timeout_s then
@@ -225,7 +201,7 @@ begin
         -- wrap-around
         cnt_timeout_q <= cnt_timeout_high_c;
         timeout_q     <= true;
-      elsif dec_timeout_v then
+      elsif sample_underflow_s then
         -- decrement counter when sampler wraps around
         cnt_timeout_q <= cnt_timeout_q - 1;
       end if;
@@ -235,7 +211,7 @@ begin
       if shift_buttons_s then
         shift_buttons_q(buttons_t'high downto 1) <= shift_buttons_q(buttons_t'high-1 downto 0);
 
-        if more_ones_q then
+        if sample_s = '1' then
           shift_buttons_q(0) <= '1';
         else
           shift_buttons_q(0) <= '0';
@@ -273,8 +249,6 @@ begin
   --
   -----------------------------------------------------------------------------
 
-  pad_data_s         <= pad_data_sync_q(1);
-
   -- indicates that all buttons have been read
   all_buttons_read_s <= num_buttons_read_q = 0;
 
@@ -288,9 +262,9 @@ begin
   fsm: process (state_q,
                 rx_en_i,
                 pad_data_s,
+                wrap_sample_s,
                 all_buttons_read_s,
-                sampled_s,
-                sample_underflow_q,
+                sample_underflow_s,
                 timeout_q)
   begin
     sync_sample_s       <= false;
@@ -342,7 +316,7 @@ begin
       -- Or abort upon timeout.
       when WAIT_FOR_1 =>
         if pad_data_s = '0' then
-          if not sample_underflow_q then
+          if not sample_underflow_s then
             state_s       <= WAIT_FOR_1;
           else
             -- timeout while reading buttons!
@@ -371,7 +345,7 @@ begin
           end if;
 
         else
-          if sample_underflow_q then
+          if sample_underflow_s then
             if all_buttons_read_s then
               -- last button was read
               -- so it's ok to timeout
@@ -435,6 +409,9 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.2  2004/10/08 20:51:59  arniml
+-- turn rx and tx size into bytes instead of bits
+--
 -- Revision 1.1  2004/10/07 21:23:10  arniml
 -- initial check-in
 --
