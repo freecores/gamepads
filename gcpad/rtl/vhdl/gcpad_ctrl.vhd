@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_ctrl.vhd,v 1.1 2004-10-07 21:23:10 arniml Exp $
+-- $Id: gcpad_ctrl.vhd,v 1.2 2004-10-09 17:04:36 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -60,11 +60,13 @@ entity gcpad_ctrl is
     reset_i       : in  std_logic;
     pad_request_i : in  std_logic;
     pad_avail_o   : out std_logic;
+    rx_timeout_o  : out std_logic;
     -- Control Interface ------------------------------------------------------
     tx_start_o    : out boolean;
     tx_finished_i : in  boolean;
     rx_en_o       : out boolean;
-    rx_done_i     : in  boolean
+    rx_done_i     : in  boolean;
+    rx_data_ok_i  : in  boolean
   );
 
 end gcpad_ctrl;
@@ -76,16 +78,22 @@ architecture rtl of gcpad_ctrl is
 
   type state_t is (IDLE,
                    TX,
-                   RX_START,
-                   RX_WAIT,
-                   DEL1,
-                   DEL1_WAIT,
-                   DEL2,
-                   DEL2_WAIT,
-                   DEL3,
-                   DEL3_WAIT);
+                   RX1_START,
+                   RX1_WAIT,
+                   RX2_START,
+                   RX2_WAIT,
+                   RX3_START,
+                   RX3_WAIT,
+                   RX4_START,
+                   RX4_WAIT);
   signal state_s,
          state_q  : state_t;
+
+  signal set_txrx_finished_s    : boolean;
+  signal enable_txrx_finished_s : boolean;
+  signal txrx_finished_q        : std_logic;
+
+  signal timeout_q : std_logic;
 
 begin
 
@@ -98,10 +106,27 @@ begin
   seq: process (reset_i, clk_i)
   begin
     if reset_i = reset_level_g then
-      state_q   <= IDLE;
+      state_q         <= IDLE;
+
+      txrx_finished_q <= '0';
+
+      timeout_q <= '1';
 
     elsif clk_i'event and clk_i = '1' then
       state_q <= state_s;
+
+      -- transmit/receive finished flag
+      if set_txrx_finished_s then
+        txrx_finished_q <= '1';
+      elsif pad_request_i = '1' then
+        txrx_finished_q <= '0';
+      end if;
+
+      if pad_request_i = '1' then
+        timeout_q <= '1';
+      elsif rx_data_ok_i then
+        timeout_q <= '0';
+      end if;
 
     end if;
 
@@ -121,73 +146,75 @@ begin
                 rx_done_i,
                 pad_request_i)
   begin
-    rx_en_o          <= false;
-    state_s          <= IDLE;
-    tx_start_o       <= false;
-    pad_avail_o      <= '0';
+    rx_en_o                <= false;
+    state_s                <= IDLE;
+    tx_start_o             <= false;
+    set_txrx_finished_s    <= false;
+    enable_txrx_finished_s <= false;
 
     case state_q is
       when IDLE =>
+        -- enable output of txrx_finished flag
+        -- the flag has to be suppressed while the FSM probes four times
+        enable_txrx_finished_s <= true;
+
         if pad_request_i = '1' then
-          state_s      <= TX;
-          tx_start_o   <= true;
+          state_s    <= TX;
+          tx_start_o <= true;
         else
-          state_s      <= IDLE;
+          state_s    <= IDLE;
         end if;
 
       when TX =>
         if not tx_finished_i then
-          state_s      <= TX;
+          state_s <= TX;
         else
-          state_s      <= RX_START;
+          state_s <= RX1_START;
         end if;
 
-      when RX_START =>
+      when RX1_START =>
         rx_en_o <= true;
-        state_s <= RX_WAIT;
+        state_s <= RX1_WAIT;
 
-      when RX_WAIT =>
+      when RX1_WAIT =>
         if rx_done_i then
-          state_s     <= DEL1;
+          state_s <= RX2_START;
         else
-          state_s     <= RX_WAIT;
+          state_s <= RX1_WAIT;
         end if;
 
-      when DEL1 =>
-        -- start receiver and wait for its initial timeout
+      when RX2_START =>
         rx_en_o <= true;
-        state_s <= DEL1_WAIT;
+        state_s <= RX2_WAIT;
 
-      when DEL1_WAIT =>
+      when RX2_WAIT =>
         if rx_done_i then
-          state_s <= DEL2;
+          state_s <= RX3_START;
         else
-          state_s <= DEL1_WAIT;
+          state_s <= RX2_WAIT;
         end if;
 
-      when DEL2 =>
-        -- start receiver and wait for its initial timeout
+      when RX3_START =>
         rx_en_o <= true;
-        state_s <= DEL2_WAIT;
+        state_s <= RX3_WAIT;
 
-      when DEL2_WAIT =>
+      when RX3_WAIT =>
         if rx_done_i then
-          state_s <= DEL3;
+          state_s <= RX4_START;
         else
-          state_s <= DEL2_WAIT;
+          state_s <= RX3_WAIT;
         end if;
 
-      when DEL3 =>
-        -- start receiver and wait for its initial timeout
+      when RX4_START =>
         rx_en_o <= true;
-        state_s <= DEL3_WAIT;
+        state_s <= RX4_WAIT;
 
-      when DEL3_WAIT =>
+      when RX4_WAIT =>
         if rx_done_i then
-          pad_avail_o <= '1';
-          state_s     <= IDLE;
+          state_s             <= IDLE;
+          set_txrx_finished_s <= true;
         else
-          state_s     <= DEL3_WAIT;
+          state_s             <= RX4_WAIT;
         end if;
 
       when others =>
@@ -199,6 +226,17 @@ begin
   --
   -----------------------------------------------------------------------------
 
+
+  -----------------------------------------------------------------------------
+  -- Output mapping
+  -----------------------------------------------------------------------------
+  pad_avail_o  <=   txrx_finished_q
+                  when enable_txrx_finished_s else
+                    '0';
+  rx_timeout_o <=   timeout_q
+                  when enable_txrx_finished_s else
+                    '0';
+
 end rtl;
 
 
@@ -206,4 +244,7 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/07 21:23:10  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
