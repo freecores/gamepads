@@ -1,3 +1,14 @@
+##############################################################################
+#
+# Tool-specific Makefile for the GHDL compiler.
+#
+# $Id: Makefile,v 1.2 2004-10-05 18:18:23 arniml Exp $
+#
+# Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
+#
+# All rights reserved
+#
+##############################################################################
 
 
 PROJECT_DIR = ../..
@@ -43,7 +54,11 @@ work/snespad-c.o: $(RTL_DIR)/snespad-c.vhd \
                   work/snespad_pad-c.o
 	$(ANALYZE) $(RTL_DIR)/snespad-c.vhd
 
-work/tb.o: $(BENCH_DIR)/tb.vhd \
+work/snespad_comp-pack.o: $(RTL_DIR)/snespad_comp-pack.vhd
+	$(ANALYZE) $(RTL_DIR)/snespad_comp-pack.vhd
+
+work/tb.o: $(BENCH_DIR)/tb.vhd      \
+           work/snespad_comp-pack.o \
            work/snespad.o
 	$(ANALYZE) $(BENCH_DIR)/tb.vhd
 work/tb-c.o: $(BENCH_DIR)/tb-c.vhd \
