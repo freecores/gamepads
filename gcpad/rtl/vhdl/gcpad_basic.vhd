@@ -2,7 +2,7 @@
 --
 -- GCpad controller core
 --
--- $Id: gcpad_basic.vhd,v 1.3 2004-10-09 00:33:55 arniml Exp $
+-- $Id: gcpad_basic.vhd,v 1.4 2004-10-09 17:03:43 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -100,10 +100,12 @@ architecture struct of gcpad_basic is
       reset_i       : in  std_logic;
       pad_request_i : in  std_logic;
       pad_avail_o   : out std_logic;
+      rx_timeout_o  : out std_logic;
       tx_start_o    : out boolean;
       tx_finished_i : in  boolean;
       rx_en_o       : out boolean;
-      rx_done_i     : in  boolean
+      rx_done_i     : in  boolean;
+      rx_data_ok_i  : in  boolean
     );
   end component;
 
@@ -133,6 +135,7 @@ architecture struct of gcpad_basic is
       reset_i          : in  std_logic;
       rx_en_i          : in  boolean;
       rx_done_o        : out boolean;
+      rx_data_ok_o     : out boolean;
       rx_size_i        : in  std_logic_vector(3 downto 0);
       pad_data_i       : in  std_logic;
       rx_data_o        : out buttons_t
@@ -159,7 +162,8 @@ architecture struct of gcpad_basic is
   signal tx_finished_s : boolean;
 
   signal rx_en_s,
-         rx_done_s : boolean;
+         rx_done_s,
+         rx_data_ok_s : boolean;
 
   signal rx_data_s : buttons_t;
 
@@ -178,10 +182,12 @@ begin
       reset_i       => reset_i,
       pad_request_i => pad_request_i,
       pad_avail_o   => pad_avail_o,
+      rx_timeout_o  => open,
       tx_start_o    => tx_start_s,
       tx_finished_i => tx_finished_s,
       rx_en_o       => rx_en_s,
-      rx_done_i     => rx_done_s
+      rx_done_i     => rx_done_s,
+      rx_data_ok_i  => rx_data_ok_s
     );
 
   tx_b : gcpad_tx
@@ -209,6 +215,7 @@ begin
       reset_i          => reset_i,
       rx_en_i          => rx_en_s,
       rx_done_o        => rx_done_s,
+      rx_data_ok_o     => rx_data_ok_s,
       rx_size_i        => rx_size_s,
       pad_data_i       => pad_data_io,
       rx_data_o        => rx_data_s
@@ -251,6 +258,9 @@ end struct;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.3  2004/10/09 00:33:55  arniml
+-- shift rx_data to button assignment to toplevel
+--
 -- Revision 1.2  2004/10/08 20:51:59  arniml
 -- turn rx and tx size into bytes instead of bits
 --
