@@ -2,7 +2,7 @@
 #
 # Tool-specific Makefile for the GHDL compiler.
 #
-# $Id: Makefile,v 1.1 2004-10-07 21:25:20 arniml Exp $
+# $Id: Makefile,v 1.2 2004-10-09 17:06:40 arniml Exp $
 #
 # Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 #
@@ -29,11 +29,20 @@ work:
 work/gcpad_pack-p.o: $(RTL_DIR)/gcpad_pack-p.vhd
 	$(ANALYZE) $(RTL_DIR)/gcpad_pack-p.vhd
 
+work/gcpad_sampler.o: $(RTL_DIR)/gcpad_sampler.vhd \
+                      work/gcpad_pack-p.o
+	$(ANALYZE) $(RTL_DIR)/gcpad_sampler.vhd
+work/gcpad_sampler-c.o: $(RTL_DIR)/gcpad_sampler-c.vhd \
+                        work/gcpad_sampler.o
+	$(ANALYZE) $(RTL_DIR)/gcpad_sampler-c.vhd
+
 work/gcpad_rx.o: $(RTL_DIR)/gcpad_rx.vhd \
+                 work/gcpad_sampler.o    \
                  work/gcpad_pack-p.o
 	$(ANALYZE) $(RTL_DIR)/gcpad_rx.vhd
 work/gcpad_rx-c.o: $(RTL_DIR)/gcpad_rx-c.vhd \
-                 work/gcpad_rx.o
+                   work/gcpad_sampler-c.o    \
+                   work/gcpad_rx.o
 	$(ANALYZE) $(RTL_DIR)/gcpad_rx-c.vhd
 
 work/gcpad_tx.o: $(RTL_DIR)/gcpad_tx.vhd \
