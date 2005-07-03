@@ -2,7 +2,7 @@
 --
 -- SNESpad controller core
 --
--- $Id: snespad_ctrl.vhd,v 1.1 2004-10-05 17:01:27 arniml Exp $
+-- $Id: snespad_ctrl.vhd,v 1.2 2005-07-03 21:36:00 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -80,7 +80,6 @@ architecture rtl of snespad_ctrl is
   type state_t is (IDLE,
                    IDLE2,
                    LATCH,
-                   CLOCK,
                    READ_PAD);
 
   signal pad_latch_q,
@@ -216,4 +215,7 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/05 17:01:27  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
