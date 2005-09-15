@@ -2,7 +2,7 @@
 --
 -- SNESpad controller core
 --
--- $Id: snespad_ctrl.vhd,v 1.2 2005-07-03 21:36:00 arniml Exp $
+-- $Id: snespad_ctrl.vhd,v 1.3 2005-09-15 17:28:17 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -114,7 +114,6 @@ begin
 
 
   seq: process (reset_i, clk_i)
-    variable clocks_per_6us_overflow_v : boolean;
   begin
     if reset_i = reset_level_g then
       pad_latch_q <= '1';
@@ -215,6 +214,9 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.2  2005/07/03 21:36:00  arniml
+-- removed obsolete state CLOCK
+--
 -- Revision 1.1  2004/10/05 17:01:27  arniml
 -- initial check-in
 --

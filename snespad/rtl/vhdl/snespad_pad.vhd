@@ -2,7 +2,7 @@
 --
 -- SNESpad controller core
 --
--- $Id: snespad_pad.vhd,v 1.1 2004-10-05 17:01:27 arniml Exp $
+-- $Id: snespad_pad.vhd,v 1.2 2005-09-15 17:28:02 arniml Exp $
 --
 -- Copyright (c) 2004, Arnim Laeuger (arniml@opencores.org)
 --
@@ -106,7 +106,6 @@ begin
   -- pragma translate_on
 
   seq: process (reset_i, clk_i)
-    variable mult_6us_overflow_v : boolean;
   begin
     if reset_i = reset_level_g then
       for i in buttons_t'range loop
@@ -151,4 +150,7 @@ end rtl;
 -- File History:
 --
 -- $Log: not supported by cvs2svn $
+-- Revision 1.1  2004/10/05 17:01:27  arniml
+-- initial check-in
+--
 -------------------------------------------------------------------------------
